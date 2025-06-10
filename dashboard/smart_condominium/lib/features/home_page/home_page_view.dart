@@ -16,16 +16,12 @@ class HomePageView extends HomePageViewModel {
     return Scaffold(
       body: Stack(
         children: [
-          // Imagem decorativa no canto superior direito
           Positioned(
             top: 0,
             right: 0,
-            child: Image.asset(
-              'assets/icons/rectangle.png', // substitua pelo caminho correto
-              width: 200,
-            ),
+            child: Image.asset('assets/icons/rectangle.png', width: 200),
           ),
-          // Conteúdo principal
+
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
