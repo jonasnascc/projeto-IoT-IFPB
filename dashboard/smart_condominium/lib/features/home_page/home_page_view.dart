@@ -1,19 +1,61 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/components/icon_card.dart';
 import 'home_page_view_model.dart';
 
 class HomePageView extends HomePageViewModel {
   @override
   Widget build(BuildContext context) {
+    final contentChildren = [
+      IconCard(imagePath: 'assets/icons/quality.png'),
+      IconCard(imagePath: 'assets/icons/flash.png'),
+      IconCard(imagePath: 'assets/icons/gate.png'),
+    ];
+
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('Home'),
-        ),
-        body: Column(
-          children: [
-            const Text('test'),
-            TextButton(onPressed: () {}, child: const Text('21'))
-          ],
-        ));
+      body: Stack(
+        children: [
+          // Imagem decorativa no canto superior direito
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Image.asset(
+              'assets/icons/rectangle.png', // substitua pelo caminho correto
+              width: 200,
+            ),
+          ),
+          // Conteúdo principal
+          SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    'condomínio inteligente',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: Center(
+                    child: kIsWeb
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: contentChildren,
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: contentChildren,
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

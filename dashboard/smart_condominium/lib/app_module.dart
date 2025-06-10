@@ -1,4 +1,5 @@
 import 'package:flutter_modular/flutter_modular.dart';
+import 'package:smart_condominium/core/managers/mqqt_manager.dart';
 
 import 'core/core.dart';
 
@@ -9,6 +10,7 @@ class AppModule extends Module {
 
     i
       ..addSingleton<StorageManager>(() => StorageManager.instance)
+      ..addSingleton<MqttManager>(() => MqttManager.instance)
       ..addSingleton<NavigatorManager>(() => NavigatorManager.instance);
   }
 
@@ -16,8 +18,6 @@ class AppModule extends Module {
   void routes(RouteManager r) {
     super.routes(r);
 
-    r
-      ..child('/', child: (context) => const LoginPage())
-      ..child(HomePage.route, child: (context) => const HomePage());
+    r.child('/', child: (context) => const HomePage());
   }
 }
