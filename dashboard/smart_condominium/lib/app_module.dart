@@ -1,5 +1,4 @@
 import 'package:flutter_modular/flutter_modular.dart';
-import 'package:smart_condominium/core/managers/mqqt_manager.dart';
 
 import 'core/core.dart';
 
