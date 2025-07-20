@@ -10,7 +10,24 @@ abstract class HomePageViewModel extends State<HomePage> {
   final _mqttManager = Modular.get<MqttManager>();
 
   OverlayEntry? _statusOverlay;
-  String get gateStatus => _mqttManager.gateStatus;
+  String get gateStatus => _mqttManager.gateOpen == null
+      ? 'Sem Status'
+      : (_mqttManager.gateOpen! ? 'Aberto' : 'Fechado');
+  String get gateTimestamp => _mqttManager.gateTimestamp ?? '-';
+
+  ValueNotifier<bool?> get gateNotifier => _mqttManager.gateNotifier;
+  ValueNotifier<double?> get currentNotifier => _mqttManager.currentNotifier;
+  ValueNotifier<double?> get distanceNotifier => _mqttManager.distanceNotifier;
+
+  String get currentStr => _mqttManager.current == null
+      ? '-'
+      : '${_mqttManager.current!.toStringAsFixed(3)} A';
+  String get currentTimestamp => _mqttManager.currentTimestamp ?? '-';
+
+  String get distanceStr => _mqttManager.distance == null
+      ? '-'
+      : '${_mqttManager.distance!.toStringAsFixed(1)} cm';
+  String get distanceTimestamp => _mqttManager.distanceTimestamp ?? '-';
 
   @override
   void initState() {
