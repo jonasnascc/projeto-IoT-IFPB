@@ -34,7 +34,7 @@ const relTables = [
 ]
 
 const totalOccurs = [
-    10,  1000,   1000
+    1000,  1000,   1000
 //  caixa, portao, energia
 ]
 
