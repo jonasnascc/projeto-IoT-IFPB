@@ -1,12 +1,16 @@
 const express = require('express');
 const mqtt = require('mqtt');
 const db = require('./models');
+const routes = require('./routes');
 
-const calcularVolume = require('./helpers/calcularVolume')
+const calcularVolume = require('./helpers/calcularVolume');
+
 require('dotenv').config();
 
 const app = express();
 app.use(express.json());
+
+app.use("/", routes)
 
 const mqttClient = mqtt.connect(process.env.MQTT_BROKER, {
   username: process.env.MQTT_USERNAME,
@@ -59,7 +63,7 @@ mqttClient.on('message', async (receivedTopic, message) => {
 
         const tableName = relTables[topicIndex];
 
-        const last = await db[tableName].findOne({ // mais antigo
+        const last = await db[tableName].findOne({
             order: [['timestamp', 'DESC']],
         });
         
