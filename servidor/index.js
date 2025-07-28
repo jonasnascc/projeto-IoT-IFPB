@@ -1,0 +1,118 @@
+const express = require('express');
+const mqtt = require('mqtt');
+const db = require('./models');
+require('dotenv').config();
+
+const app = express();
+app.use(express.json());
+
+const mqttClient = mqtt.connect(process.env.MQTT_BROKER, {
+  username: process.env.MQTT_USERNAME,
+  password: process.env.MQTT_PASSWORD,
+});
+
+mqttClient.on('error', (err) => {
+  console.error('❌ Erro ao conectar ao MQTT:', err.message);
+});
+
+const topicos = [
+    "sensor/caixa",
+    "sensor/portao",
+    "sensor/energia"
+]
+
+const relTables = [
+    "CaixaMensagens",
+    "PortaoMensagens",
+    "EnergiaMensagens"
+]
+
+const totalOccurs = [
+    1000,  1000,   1000
+//  caixa, portao, energia
+]
+
+const DISTANCIA_OFFSET_CM_LIMIT = 1;
+
+
+mqttClient.on('connect', () => {
+  console.log('🟢 Conectado ao MQTT');
+  for (let topico of topicos){
+    mqttClient.subscribe(topico, (err) => {
+        if (err) console.error(`Erro na inscrição no topico '${topico}': `, err);
+        else console.log(`📡 Inscrito em: ${topico}`);
+    });
+  }
+});
+
+mqttClient.on('message', async (receivedTopic, message) => {
+    const conteudo = message.toString();
+    console.log(`📥 ${receivedTopic} => ${conteudo}`);
+
+    const topicIndex = topicos.indexOf(receivedTopic)
+
+    try {
+        const jsonObj = JSON.parse(conteudo)
+        if("alerta" in jsonObj) return;
+
+        const tableName = relTables[topicIndex];
+
+        const last = await db[tableName].findOne({ // mais antigo
+            order: [['timestamp', 'DESC']],
+        });
+        
+        switch(receivedTopic){
+            case("sensor/energia"): {
+                if(last.corrente == jsonObj.corrente) {
+                    console.log("ignorando")
+                    return;
+                }
+                break;
+            }
+            case("sensor/caixa"): {
+                if(last.distancia == jsonObj.distancia || 
+                    (jsonObj.distancia > last.distancia - DISTANCIA_OFFSET_CM_LIMIT 
+                        && jsonObj.distancia < last.distancia + DISTANCIA_OFFSET_CM_LIMIT 
+                    )
+                ) {
+                    console.log("ignorando")
+                    return;
+                }
+                break;
+            }
+        }
+        const count = await db[tableName].count();
+
+        let first;
+        if(count >= totalOccurs[topicIndex]) {
+            first = await db[tableName].findOne({ // mais antigo
+                order: [['timestamp', 'ASC']],
+            });
+        }
+        const created = await db[tableName].create({topico: receivedTopic, ...jsonObj})
+
+        if(created && first){
+            await first.destroy();
+            // console.log(`Maximo de objetos na tabela '${tableName}' excedido, excluindo o mais antigo.`)
+        }
+    } catch (error) {
+        console.error('❌ Erro ao salvar:', error);
+    }
+});
+
+app.get('/mensagens', async (req, res) => {
+  try {
+    const mensagens = await db["Mensagem"].findAll({ order: [['createdAt', 'DESC']] });
+    res.json(mensagens);
+  } catch (err) {
+    res.status(500).send('Erro ao buscar mensagens');
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+
+db.sequelize.sync().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+  });
+});
