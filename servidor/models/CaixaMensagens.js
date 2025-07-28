@@ -5,6 +5,10 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     distancia: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    volume: {
       type: DataTypes.FLOAT,
       allowNull: false,
     },

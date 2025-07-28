@@ -1,6 +1,8 @@
 const express = require('express');
 const mqtt = require('mqtt');
 const db = require('./models');
+
+const calcularVolume = require('./helpers/calcularVolume')
 require('dotenv').config();
 
 const app = express();
@@ -28,7 +30,7 @@ const relTables = [
 ]
 
 const totalOccurs = [
-    1000,  1000,   1000
+    10,  1000,   1000
 //  caixa, portao, energia
 ]
 
@@ -63,21 +65,37 @@ mqttClient.on('message', async (receivedTopic, message) => {
         
         switch(receivedTopic){
             case("sensor/energia"): {
-                if(last.corrente == jsonObj.corrente) {
-                    console.log("ignorando")
-                    return;
+                if(last) {
+                    if(last.corrente == jsonObj.corrente) {
+                        console.log("ignorando")
+                        return;
+                    }
                 }
+                
                 break;
             }
             case("sensor/caixa"): {
-                if(last.distancia == jsonObj.distancia || 
-                    (jsonObj.distancia > last.distancia - DISTANCIA_OFFSET_CM_LIMIT 
-                        && jsonObj.distancia < last.distancia + DISTANCIA_OFFSET_CM_LIMIT 
-                    )
-                ) {
-                    console.log("ignorando")
-                    return;
+                jsonObj.distancia = Math.round(jsonObj.distancia)
+                if(last) {
+                    if(last.distancia == jsonObj.distancia || 
+                        (jsonObj.distancia > last.distancia - DISTANCIA_OFFSET_CM_LIMIT 
+                            && jsonObj.distancia < last.distancia + DISTANCIA_OFFSET_CM_LIMIT 
+                        )
+                    ) {
+                        console.log("ignorando")
+                        return;
+                    }
                 }
+
+                jsonObj.volume = calcularVolume({
+                    distanciaSensor: jsonObj.distancia/100, // 0.3889 m ~= 1000 litros
+                    diametroCaixa: 1.52, 
+                    alturaUtil: 0.72, 
+                    alturaSensor: 0.94
+                });
+                console.log("Volume: ", jsonObj.volume)
+                // jsonObj.volume = calcularVolume(jsonObj.distancia - (94 - 72), 72, 151);
+
                 break;
             }
         }
@@ -89,6 +107,7 @@ mqttClient.on('message', async (receivedTopic, message) => {
                 order: [['timestamp', 'ASC']],
             });
         }
+
         const created = await db[tableName].create({topico: receivedTopic, ...jsonObj})
 
         if(created && first){
