@@ -119,15 +119,6 @@ mqttClient.on('message', async (receivedTopic, message) => {
     }
 });
 
-app.get('/mensagens', async (req, res) => {
-  try {
-    const mensagens = await db["Mensagem"].findAll({ order: [['createdAt', 'DESC']] });
-    res.json(mensagens);
-  } catch (err) {
-    res.status(500).send('Erro ao buscar mensagens');
-  }
-});
-
 const PORT = process.env.PORT || 3000;
 
 db.sequelize.sync().then(() => {
