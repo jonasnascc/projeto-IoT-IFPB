@@ -4,7 +4,8 @@
   "description": "Servidor para projeto Iot de condominio inteligente",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon localhost 3000 ./index.js"
   },
   "author": "",
   "license": "ISC",
@@ -12,6 +13,7 @@
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "mqtt": "^5.13.3",
+    "nodemon": "^3.1.10",
     "pg": "^8.16.3",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.7"

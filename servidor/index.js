@@ -10,7 +10,7 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 
-app.use("/", routes)
+app.use("/api", routes)
 
 const mqttClient = mqtt.connect(process.env.MQTT_BROKER, {
   username: process.env.MQTT_USERNAME,
