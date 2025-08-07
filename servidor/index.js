@@ -2,6 +2,7 @@ const express = require('express');
 const mqtt = require('mqtt');
 const db = require('./models');
 const routes = require('./routes');
+const cors = require('cors');
 
 const calcularVolume = require('./helpers/calcularVolume');
 
@@ -10,6 +11,7 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 
+app.use(cors())
 app.use("/api", routes)
 
 const mqttClient = mqtt.connect(process.env.MQTT_BROKER, {
