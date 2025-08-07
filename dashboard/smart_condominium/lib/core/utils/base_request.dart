@@ -20,7 +20,14 @@ class AppBaseRequest {
   });
 
   Future<http.Response> sendRequest(AppBaseRequest request) async {
-    final uri = Uri.parse(request.path);
+    // Build URI with query parameters
+    final uri = Uri.parse(request.path).replace(
+      queryParameters: request.queryParameters.isNotEmpty
+          ? request.queryParameters.map(
+              (key, value) => MapEntry(key, value.toString()),
+            )
+          : null,
+    );
     final headers = request.headers ?? {};
 
     late http.Response response;
