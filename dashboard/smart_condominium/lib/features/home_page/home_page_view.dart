@@ -1,7 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../core/components/icon_card.dart';
+import '../../core/repositories/ graphics_repository.dart';
 import 'home_page_view_model.dart';
+import 'components/portao_graph_modal.dart';
+import 'components/caixa_volume_chart.dart';
+import 'components/corrente_chart.dart';
 
 class HomePageView extends HomePageViewModel {
   @override
@@ -48,13 +52,15 @@ class HomePageView extends HomePageViewModel {
                       IconCard(
                         imagePath: card['icon']!,
                         onTap: () async {
-                          showStatusOverlay(
-                            context,
-                            card['icon']!,
-                            '${card['label']}: $status\nHorário: ${gateTimestamp}',
+                          await _showLoadingDialog(context);
+                          final portaoData = await GraphicsRepository.instance
+                              .getPortaoData(limit: 100000, offset: 1);
+                          Navigator.of(context).pop();
+                          showModalBottomSheet(
+                            context: context,
+                            builder: (ctx) =>
+                                PortaoGraphModal(data: portaoData),
                           );
-                          await Future.delayed(Duration(seconds: 4));
-                          removeStatusOverlay();
                         },
                       ),
                       Positioned.fill(
@@ -96,7 +102,7 @@ class HomePageView extends HomePageViewModel {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Horário: ${gateTimestamp}',
+                    'Horário: gateTimestamp',
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
@@ -121,13 +127,40 @@ class HomePageView extends HomePageViewModel {
                       IconCard(
                         imagePath: card['icon']!,
                         onTap: () async {
-                          showStatusOverlay(
-                            context,
-                            card['icon']!,
-                            '${card['label']}: $currentStr\nHorário: ${currentTimestamp}',
+                          await _showLoadingDialog(context);
+                          final energiaData = await GraphicsRepository.instance
+                              .getEnergiaData(limit: 100000, offset: 1);
+                          Navigator.of(context).pop();
+                          showModalBottomSheet(
+                            context: context,
+                            builder: (ctx) => energiaData == null
+                                ? const Center(
+                                    child: Text('Nenhum dado disponível'),
+                                  )
+                                : Container(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text(
+                                          'Variação da Corrente Elétrica',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        if (energiaData.data == null ||
+                                            energiaData.data!.isEmpty)
+                                          const Text('Nenhum dado disponível')
+                                        else
+                                          CorrenteChart(
+                                            data: energiaData.data!,
+                                          ),
+                                      ],
+                                    ),
+                                  ),
                           );
-                          await Future.delayed(Duration(seconds: 4));
-                          removeStatusOverlay();
                         },
                       ),
                       Positioned.fill(
@@ -194,13 +227,40 @@ class HomePageView extends HomePageViewModel {
                       IconCard(
                         imagePath: card['icon']!,
                         onTap: () async {
-                          showStatusOverlay(
-                            context,
-                            card['icon']!,
-                            '${card['label']}: $distanceStr\nHorário: ${distanceTimestamp}',
+                          await _showLoadingDialog(context);
+                          final caixaData = await GraphicsRepository.instance
+                              .getCaixaData(limit: 100000, offset: 1);
+                          Navigator.of(context).pop();
+                          showModalBottomSheet(
+                            context: context,
+                            builder: (ctx) => caixaData == null
+                                ? const Center(
+                                    child: Text('Nenhum dado disponível'),
+                                  )
+                                : Container(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text(
+                                          'Variação do Volume da Caixa',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        if (caixaData.data == null ||
+                                            caixaData.data!.isEmpty)
+                                          const Text('Nenhum dado disponível')
+                                        else
+                                          CaixaVolumeChart(
+                                            data: caixaData.data!,
+                                          ),
+                                      ],
+                                    ),
+                                  ),
                           );
-                          await Future.delayed(Duration(seconds: 4));
-                          removeStatusOverlay();
                         },
                       ),
                       Positioned.fill(
@@ -355,6 +415,14 @@ class HomePageView extends HomePageViewModel {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _showLoadingDialog(BuildContext context) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(child: CircularProgressIndicator()),
     );
   }
 }

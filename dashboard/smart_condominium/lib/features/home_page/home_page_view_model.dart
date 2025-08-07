@@ -66,7 +66,7 @@ abstract class HomePageViewModel extends State<HomePage> {
           right: 0,
           child: Material(
             elevation: 10,
-            color: Colors.black.withOpacity(0.85),
+            color: Colors.black,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
