@@ -22,7 +22,7 @@ else {
       host: DB_HOST,
       port: DB_PORT,
       dialect: 'postgres',
-      logging: false,
+      logging: true,
     }
   );
 }
