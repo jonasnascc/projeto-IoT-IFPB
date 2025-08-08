@@ -4,9 +4,13 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
-      corrente: {
+    corrente: {
       type: DataTypes.FLOAT,
       allowNull: false,
+    },
+    consumoAtual: {
+      type: DataTypes.DECIMAL(12,6),
+      allowNull: false
     },
     timestamp: {
       type: DataTypes.DATE,

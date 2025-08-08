@@ -1,10 +1,11 @@
 const express = require('express');
 const mqtt = require('mqtt');
-const db = require('./models');
+const db = require('./models/conn');
 const routes = require('./routes');
 const cors = require('cors');
 
 const calcularVolume = require('./helpers/calcularVolume');
+const calcularConsumo = require('./helpers/calcularConsumo');
 
 require('dotenv').config();
 
@@ -77,7 +78,16 @@ mqttClient.on('message', async (receivedTopic, message) => {
                         return;
                     }
                 }
+
+                const consumo = await calcularConsumo({
+                    db, 
+                    tableName, 
+                    leitura: jsonObj.corrente,
+                    tensao: 12, 
+                    intervalo: 5 //segundos
+                })
                 
+                jsonObj.consumoAtual = consumo;
                 break;
             }
             case("sensor/caixa"): {
@@ -127,7 +137,7 @@ mqttClient.on('message', async (receivedTopic, message) => {
 
 const PORT = process.env.PORT || 3000;
 
-db.sequelize.sync().then(() => {
+db.sequelize.sync({force : true}).then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
   });
