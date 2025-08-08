@@ -137,7 +137,7 @@ mqttClient.on('message', async (receivedTopic, message) => {
 
 const PORT = process.env.PORT || 3000;
 
-db.sequelize.sync({force : true}).then(() => {
+db.sequelize.sync().then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
   });
