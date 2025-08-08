@@ -7,15 +7,8 @@ async function calcularConsumo(opt) {
         order: [['timestamp', 'DESC']],
     }); 
 
-    const intervaloFloat = parseFloat(intervalo);
-    if (isNaN(intervaloFloat)) {
-        throw new Error("Intervalo inválido, não é número");
-    }
-
-    const intervaloLiteral = intervaloFloat % 1 === 0 ? `${intervaloFloat}.0` : `${intervaloFloat}`;
-
     const consumoAnterior = last ? parseFloat(last.consumoAtual) : 0.0
-    const consumoAtual = consumoAnterior + (tensao * leitura * (intervaloLiteral/3600)/1000)
+    const consumoAtual = consumoAnterior + (tensao * leitura * (intervalo/3600)/1000)
 
     return parseFloat(consumoAtual).toFixed(6);
 } 
