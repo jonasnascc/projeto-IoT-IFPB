@@ -1,380 +1,121 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../core/components/icon_card.dart';
-import '../../core/repositories/ graphics_repository.dart';
+
 import 'home_page_view_model.dart';
-import 'components/portao_graph_modal.dart';
-import 'components/caixa_volume_chart.dart';
-import 'components/corrente_chart.dart';
 
 class HomePageView extends HomePageViewModel {
   @override
   Widget build(BuildContext context) {
-    List<Widget> buildContentChildren() {
-      final cards = [
-        {
-          'icon': 'assets/icons/quality.png',
-          'label': 'Distância na caixa',
-          'value': distanceStr,
-          'timestamp': distanceTimestamp,
-        },
-        {
-          'icon': 'assets/icons/flash.png',
-          'label': 'Corrente elétrica',
-          'value': currentStr,
-          'timestamp': currentTimestamp,
-        },
-        {
-          'icon': 'assets/icons/gate.png',
-          'label': 'Status do portão',
-          'value': gateStatus,
-          'timestamp': gateTimestamp,
-        },
-      ];
+    Widget buildCard({
+      required String icon,
+      required String label,
+      required String value,
+      required String timestamp,
+      required VoidCallback onTap,
+    }) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconCard(imagePath: icon, onTap: onTap),
+              Positioned.fill(
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.black,
+                          shadows: [Shadow(color: Colors.white, blurRadius: 8)],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        value,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w500,
+                          shadows: [Shadow(color: Colors.white, blurRadius: 8)],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Horário: $timestamp',
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ],
+      );
+    }
 
-      return cards.asMap().entries.map((entry) {
-        final i = entry.key;
-        final card = entry.value;
-        // Card do portão usa ValueListenableBuilder
-        if (card['label'] == 'Status do portão') {
-          return ValueListenableBuilder<bool?>(
-            valueListenable: gateNotifier,
-            builder: (context, value, _) {
-              final status = value == null
-                  ? 'Sem Status'
-                  : (value ? 'Aberto' : 'Fechado');
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      IconCard(
-                        imagePath: card['icon']!,
-                        onTap: () async {
-                          await _showLoadingDialog(context);
-                          final portaoData = await GraphicsRepository.instance
-                              .getPortaoData(limit: 100000, offset: 1);
-                          Navigator.of(context).pop();
-                          showModalBottomSheet(
-                            context: context,
-                            builder: (ctx) =>
-                                PortaoGraphModal(data: portaoData),
-                          );
-                        },
-                      ),
-                      Positioned.fill(
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                card['label']!,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: Colors.black,
-                                  shadows: [
-                                    Shadow(color: Colors.white, blurRadius: 8),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                status,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w500,
-                                  shadows: [
-                                    Shadow(color: Colors.white, blurRadius: 8),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Horário: gateTimestamp',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              );
-            },
-          );
-        }
-        // Card de corrente usa ValueListenableBuilder
-        if (card['label'] == 'Corrente elétrica') {
-          return ValueListenableBuilder<double?>(
-            valueListenable: currentNotifier,
-            builder: (context, value, _) {
-              final currentStr = value == null
-                  ? '-'
-                  : '${value.toStringAsFixed(3)} A';
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      IconCard(
-                        imagePath: card['icon']!,
-                        onTap: () async {
-                          await _showLoadingDialog(context);
-                          final energiaData = await GraphicsRepository.instance
-                              .getEnergiaData(limit: 100000, offset: 1);
-                          Navigator.of(context).pop();
-                          showModalBottomSheet(
-                            context: context,
-                            builder: (ctx) => energiaData == null
-                                ? const Center(
-                                    child: Text('Nenhum dado disponível'),
-                                  )
-                                : Container(
-                                    padding: const EdgeInsets.all(16),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Text(
-                                          'Variação da Corrente Elétrica',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        if (energiaData.data == null ||
-                                            energiaData.data!.isEmpty)
-                                          const Text('Nenhum dado disponível')
-                                        else
-                                          CorrenteChart(
-                                            data: energiaData.data!,
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                          );
-                        },
-                      ),
-                      Positioned.fill(
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                card['label']!,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: Colors.black,
-                                  shadows: [
-                                    Shadow(color: Colors.white, blurRadius: 8),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                currentStr,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w500,
-                                  shadows: [
-                                    Shadow(color: Colors.white, blurRadius: 8),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Horário: ${currentTimestamp}',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              );
-            },
-          );
-        }
-        // Card de distância usa ValueListenableBuilder
-        if (card['label'] == 'Distância na caixa') {
-          return ValueListenableBuilder<double?>(
-            valueListenable: distanceNotifier,
-            builder: (context, value, _) {
-              final distanceStr = value == null
-                  ? '-'
-                  : '${value.toStringAsFixed(1)} cm';
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      IconCard(
-                        imagePath: card['icon']!,
-                        onTap: () async {
-                          await _showLoadingDialog(context);
-                          final caixaData = await GraphicsRepository.instance
-                              .getCaixaData(limit: 100000, offset: 1);
-                          Navigator.of(context).pop();
-                          showModalBottomSheet(
-                            context: context,
-                            builder: (ctx) => caixaData == null
-                                ? const Center(
-                                    child: Text('Nenhum dado disponível'),
-                                  )
-                                : Container(
-                                    padding: const EdgeInsets.all(16),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Text(
-                                          'Variação do Volume da Caixa',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        if (caixaData.data == null ||
-                                            caixaData.data!.isEmpty)
-                                          const Text('Nenhum dado disponível')
-                                        else
-                                          CaixaVolumeChart(
-                                            data: caixaData.data!,
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                          );
-                        },
-                      ),
-                      Positioned.fill(
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                card['label']!,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: Colors.black,
-                                  shadows: [
-                                    Shadow(color: Colors.white, blurRadius: 8),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                distanceStr,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w500,
-                                  shadows: [
-                                    Shadow(color: Colors.white, blurRadius: 8),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Horário: ${distanceTimestamp}',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              );
-            },
-          );
-        }
-        // Outros cards permanecem iguais
-        final cardWidget = Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                IconCard(
-                  imagePath: card['icon']!,
-                  onTap: () async {
-                    showStatusOverlay(
-                      context,
-                      card['icon']!,
-                      '${card['label']}: ${card['value']}\nHorário: ${card['timestamp']}',
-                    );
-                    await Future.delayed(Duration(seconds: 4));
-                    removeStatusOverlay();
-                  },
-                ),
-                Positioned.fill(
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          card['label']!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: Colors.black,
-                            shadows: [
-                              Shadow(color: Colors.white, blurRadius: 8),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          card['value']!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.black,
-                            fontWeight: FontWeight.w500,
-                            shadows: [
-                              Shadow(color: Colors.white, blurRadius: 8),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Horário: ${card['timestamp']}',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ],
-        );
-        return cardWidget;
-      }).toList();
+    List<Widget> buildContentChildren() {
+      return [
+        // Distância
+        ValueListenableBuilder<double?>(
+          valueListenable: distanceNotifier,
+          builder: (context, value, _) {
+            final distanceStr = value == null
+                ? '-'
+                : '${value.toStringAsFixed(1)} cm';
+            return buildCard(
+              icon: 'assets/icons/quality.png',
+              label: 'Distância na caixa',
+              value: distanceStr,
+              timestamp: distanceTimestamp,
+              onTap: onTapBox,
+            );
+          },
+        ),
+
+        // Corrente
+        ValueListenableBuilder<double?>(
+          valueListenable: currentNotifier,
+          builder: (context, value, _) {
+            final currentStr = value == null
+                ? '-'
+                : '${value.toStringAsFixed(3)} A';
+            return buildCard(
+              icon: 'assets/icons/flash.png',
+              label: 'Corrente elétrica',
+              value: currentStr,
+              timestamp: currentTimestamp,
+              onTap: onTapCorrente,
+            );
+          },
+        ),
+
+        // Portão
+        ValueListenableBuilder<bool?>(
+          valueListenable: gateNotifier,
+          builder: (context, value, _) {
+            final status = value == null
+                ? 'Sem Status'
+                : (value ? 'Aberto' : 'Fechado');
+            return buildCard(
+              icon: 'assets/icons/gate.png',
+              label: 'Status do portão',
+              value: status,
+              timestamp: gateTimestamp,
+              onTap: onTapGate,
+            );
+          },
+        ),
+      ];
     }
 
     return Scaffold(
@@ -415,14 +156,6 @@ class HomePageView extends HomePageViewModel {
           ),
         ],
       ),
-    );
-  }
-
-  Future<void> _showLoadingDialog(BuildContext context) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => const Center(child: CircularProgressIndicator()),
     );
   }
 }

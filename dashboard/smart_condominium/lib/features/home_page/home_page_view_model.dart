@@ -3,6 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:smart_condominium/core/managers/mqtt_manager.dart';
+import 'package:smart_condominium/core/repositories/%20graphics_repository.dart';
+import 'package:smart_condominium/features/home_page/components/caixa_volume_chart.dart';
+import 'package:smart_condominium/features/home_page/components/corrente_chart.dart';
+import 'package:smart_condominium/features/home_page/components/portao_graph_modal.dart';
 
 import 'home_page.dart';
 
@@ -50,6 +54,14 @@ abstract class HomePageViewModel extends State<HomePage> {
     await _mqttManager.connect();
   }
 
+  Future<void> showLoadingDialog(BuildContext context) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(child: CircularProgressIndicator()),
+    );
+  }
+
   void showStatusOverlay(
     BuildContext context,
     String imagePath,
@@ -91,6 +103,75 @@ abstract class HomePageViewModel extends State<HomePage> {
     );
 
     overlay.insert(_statusOverlay!);
+  }
+
+  Future<void> onTapGate() async {
+    await showLoadingDialog(context);
+    final portaoData = await GraphicsRepository.instance.getPortaoData(
+      limit: 100000,
+      offset: 1,
+    );
+    if (context.mounted) Navigator.of(context).pop();
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => PortaoGraphModal(data: portaoData),
+    );
+  }
+
+  Future<void> onTapCorrente() async {
+    await showLoadingDialog(context);
+    final energiaData = await GraphicsRepository.instance.getEnergiaData(
+      limit: 100000,
+      offset: 1,
+    );
+    if (context.mounted) Navigator.of(context).pop();
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => energiaData?.data?.isEmpty ?? true
+          ? const Center(child: Text('Nenhum dado disponível'))
+          : Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Variação da Corrente Elétrica',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  CorrenteChart(data: energiaData!.data!),
+                ],
+              ),
+            ),
+    );
+  }
+
+  onTapBox() async {
+    await showLoadingDialog(context);
+    final caixaData = await GraphicsRepository.instance.getCaixaData(
+      limit: 100000,
+      offset: 1,
+    );
+    if (context.mounted) Navigator.of(context).pop();
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => caixaData?.data?.isEmpty ?? true
+          ? const Center(child: Text('Nenhum dado disponível'))
+          : Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Variação do Volume da Caixa',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  CaixaVolumeChart(data: caixaData!.data!),
+                ],
+              ),
+            ),
+    );
   }
 
   void removeStatusOverlay() {
