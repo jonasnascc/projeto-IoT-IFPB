@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:smart_condominium/core/managers/mqtt_manager.dart';
@@ -42,16 +43,51 @@ abstract class HomePageViewModel extends State<HomePage> {
   }
 
   Future<void> initialize() async {
-    _mqttManager.initialize(
-      '8c97ab339b614714b675b317bd5e35cf.s1.eu.hivemq.cloud',
-      8883,
-      'dashboard_iot',
-      'dashboardCond2025',
-      'meuClientIdUnico12345678',
-      'test/topic',
-    );
+    if (kIsWeb) {
+      // Web: atualiza os notifiers a cada 10 segundos
+      Timer.periodic(const Duration(seconds: 10), (timer) async {
+        print('getDataWeb');
+        final energiaData = await GraphicsRepository.instance.getEnergiaData(
+          limit: 1,
+          offset: 0,
+        );
+        if (energiaData?.data?.isNotEmpty ?? false) {
+          final last = energiaData!.data!.last;
+          currentNotifier.value = last.corrente;
+          _mqttManager.currentTimestamp = last.timestamp ?? '-';
+        }
 
-    await _mqttManager.connect();
+        final portaoData = await GraphicsRepository.instance.getPortaoData(
+          limit: 1,
+          offset: 0,
+        );
+        if (portaoData?.data?.isNotEmpty ?? false) {
+          final last = portaoData!.data!.last;
+          gateNotifier.value = last.gateOpen;
+          _mqttManager.gateTimestamp = last.timestamp ?? '-';
+        }
+
+        final caixaData = await GraphicsRepository.instance.getCaixaData(
+          limit: 1,
+          offset: 0,
+        );
+        if (caixaData?.data?.isNotEmpty ?? false) {
+          final last = caixaData!.data!.last;
+          distanceNotifier.value = last.distancia;
+          _mqttManager.distanceTimestamp = last.timestamp ?? '-';
+        }
+      });
+    } else {
+      _mqttManager.initialize(
+        '8c97ab339b614714b675b317bd5e35cf.s1.eu.hivemq.cloud', // broker igual ao site
+        8884, // porta websocket segura
+        'dashboard_iot', // usuário igual ao site
+        'dashboardCond2025', // senha igual ao site
+        'clientId-jsXpWcjHHO', // clientId igual ao site
+        'testtopic/1', // tópico igual ao site
+      );
+      await _mqttManager.connect();
+    }
   }
 
   Future<void> showLoadingDialog(BuildContext context) async {
