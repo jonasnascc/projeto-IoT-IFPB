@@ -23,6 +23,8 @@ abstract class HomePageViewModel extends State<HomePage> {
   ValueNotifier<bool?> get gateNotifier => _mqttManager.gateNotifier;
   ValueNotifier<double?> get currentNotifier => _mqttManager.currentNotifier;
   ValueNotifier<double?> get distanceNotifier => _mqttManager.distanceNotifier;
+  Timer? _gateOpenTimer;
+  bool _alertShown = false;
 
   String get currentStr => _mqttManager.current == null
       ? '-'
@@ -39,6 +41,34 @@ abstract class HomePageViewModel extends State<HomePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback(
       (_) async => await initialize(),
+    );
+    gateNotifier.addListener(_checkGateStatus);
+  }
+
+  void _checkGateStatus() {
+    if (gateNotifier.value == true) {
+      _gateOpenTimer ??= Timer(const Duration(minutes: 1), () {
+        if (gateNotifier.value == true && !_alertShown) {
+          _showGateOpenAlert();
+          _alertShown = true;
+          Future.delayed(const Duration(seconds: 10), () {
+            removeStatusOverlay();
+            _alertShown = false;
+          });
+        }
+      });
+    } else {
+      _gateOpenTimer?.cancel();
+      _gateOpenTimer = null;
+      _alertShown = false;
+    }
+  }
+
+  void _showGateOpenAlert() {
+    showStatusOverlay(
+      context,
+      'assets/icons/gate.png',
+      'Alerta: Portão está aberto há mais de 1 minuto!',
     );
   }
 
@@ -219,6 +249,8 @@ abstract class HomePageViewModel extends State<HomePage> {
   void dispose() {
     _mqttManager.disconnect();
     removeStatusOverlay();
+    gateNotifier.removeListener(_checkGateStatus);
+    _gateOpenTimer?.cancel();
     super.dispose();
   }
 }
