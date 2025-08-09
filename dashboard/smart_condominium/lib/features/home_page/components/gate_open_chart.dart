@@ -26,72 +26,77 @@ class GateOpenChart extends StatelessWidget {
       final open = (model.gateOpen ?? false) ? 1.0 : 0.0;
       spots.add(FlSpot(i.toDouble(), open));
     }
-    return SizedBox(
-      height: 220,
-      child: LineChart(
-        LineChartData(
-          titlesData: FlTitlesData(
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 40,
-                getTitlesWidget: (value, meta) {
-                  if (value == 1) {
-                    return const Padding(
-                      padding: EdgeInsets.only(bottom: 4),
-                      child: Text('Open', style: TextStyle(fontSize: 12)),
-                    );
-                  }
-                  if (value == 0) {
-                    return const Padding(
-                      padding: EdgeInsets.only(top: 4),
-                      child: Text('Close', style: TextStyle(fontSize: 12)),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
+    return Column(
+      children: [
+        SizedBox(
+          height: 220,
+          child: LineChart(
+            LineChartData(
+              titlesData: FlTitlesData(
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 40,
+                    getTitlesWidget: (value, meta) {
+                      if (value == 1) {
+                        return const Padding(
+                          padding: EdgeInsets.only(bottom: 4),
+                          child: Text('Open', style: TextStyle(fontSize: 12)),
+                        );
+                      }
+                      if (value == 0) {
+                        return const Padding(
+                          padding: EdgeInsets.only(top: 4),
+                          child: Text('Close', style: TextStyle(fontSize: 12)),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 32,
+                    interval: 2,
+                    getTitlesWidget: (value, meta) {
+                      final idx = value.toInt();
+                      if (idx >= 0 && idx < sorted.length && idx % 2 == 0) {
+                        final ts = sorted[idx].timestamp;
+                        if (ts != null && ts.length >= 16) {
+                          // Mostra só HH:mm
+                          return Text(
+                            ts.substring(11, 16),
+                            style: const TextStyle(fontSize: 10),
+                          );
+                        }
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
               ),
-            ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 32,
-                interval: 2,
-                getTitlesWidget: (value, meta) {
-                  final idx = value.toInt();
-                  if (idx >= 0 && idx < sorted.length && idx % 2 == 0) {
-                    final ts = sorted[idx].timestamp;
-                    if (ts != null && ts.length >= 16) {
-                      // Mostra só HH:mm
-                      return Text(
-                        ts.substring(11, 16),
-                        style: const TextStyle(fontSize: 10),
-                      );
-                    }
-                  }
-                  return const SizedBox.shrink();
-                },
+              minY: 0,
+              maxY: 1,
+              gridData: FlGridData(
+                show: true,
+                horizontalInterval: 1,
+                verticalInterval: 2,
               ),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: spots,
+                  isCurved: false,
+                  color: Colors.blue,
+                  barWidth: 3,
+                  dotData: FlDotData(show: true),
+                ),
+              ],
             ),
           ),
-          minY: 0,
-          maxY: 1,
-          gridData: FlGridData(
-            show: true,
-            horizontalInterval: 1,
-            verticalInterval: 2,
-          ),
-          lineBarsData: [
-            LineChartBarData(
-              spots: spots,
-              isCurved: false,
-              color: Colors.blue,
-              barWidth: 3,
-              dotData: FlDotData(show: true),
-            ),
-          ],
         ),
-      ),
+        SizedBox(height: 100),
+      ],
     );
   }
 }

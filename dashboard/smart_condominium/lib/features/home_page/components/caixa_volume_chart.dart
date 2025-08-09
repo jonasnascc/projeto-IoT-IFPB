@@ -30,58 +30,63 @@ class CaixaVolumeChart extends StatelessWidget {
       final volume = model.volume ?? 0.0;
       spots.add(FlSpot(i.toDouble(), volume));
     }
-    return SizedBox(
-      height: 220,
-      child: LineChart(
-        LineChartData(
-          titlesData: FlTitlesData(
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 48,
-                getTitlesWidget: (value, meta) {
-                  return Text(
-                    value.toStringAsFixed(0),
-                    style: const TextStyle(fontSize: 10),
-                  );
-                },
-              ),
-            ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 32,
-                interval: 2,
-                getTitlesWidget: (value, meta) {
-                  final idx = value.toInt();
-                  if (idx >= 0 && idx < reduced.length) {
-                    final ts = reduced[idx].timestamp;
-                    if (ts != null && ts.length >= 16) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 220,
+          child: LineChart(
+            LineChartData(
+              titlesData: FlTitlesData(
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 48,
+                    getTitlesWidget: (value, meta) {
                       return Text(
-                        ts.substring(11, 16),
+                        value.toStringAsFixed(0),
                         style: const TextStyle(fontSize: 10),
                       );
-                    }
-                  }
-                  return const SizedBox.shrink();
-                },
+                    },
+                  ),
+                ),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 32,
+                    interval: 2,
+                    getTitlesWidget: (value, meta) {
+                      final idx = value.toInt();
+                      if (idx >= 0 && idx < reduced.length) {
+                        final ts = reduced[idx].timestamp;
+                        if (ts != null && ts.length >= 16) {
+                          return Text(
+                            ts.substring(11, 16),
+                            style: const TextStyle(fontSize: 10),
+                          );
+                        }
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
               ),
+              minY: 0,
+              maxY: spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) * 1.1,
+              gridData: FlGridData(show: true, horizontalInterval: 100),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: spots,
+                  isCurved: true,
+                  color: Colors.green,
+                  barWidth: 3,
+                  dotData: FlDotData(show: true),
+                ),
+              ],
             ),
           ),
-          minY: 0,
-          maxY: spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) * 1.1,
-          gridData: FlGridData(show: true, horizontalInterval: 100),
-          lineBarsData: [
-            LineChartBarData(
-              spots: spots,
-              isCurved: true,
-              color: Colors.green,
-              barWidth: 3,
-              dotData: FlDotData(show: true),
-            ),
-          ],
         ),
-      ),
+        SizedBox(height: 100),
+      ],
     );
   }
 }

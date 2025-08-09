@@ -39,6 +39,7 @@ class PortaoGraphModal extends StatelessWidget {
                     ]
                   : data!.data!,
             ),
+          SizedBox(height: 100),
         ],
       ),
     );
